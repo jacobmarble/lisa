@@ -15,7 +15,7 @@ User creates FRD → /lisa skill converts to lisa.json → lisa.sh runs iteratio
 | `lisa.sh` | Main runner script. Loops Claude iterations until all stories pass or max iterations reached. |
 | `LISA.md` | Agent instructions piped to Claude each iteration. Tells the agent how to find and implement stories. |
 | `skills/frd/SKILL.md` | Skill for generating Functional Requirements Documents. |
-| `skills/tasks/SKILL.md` | Skill for converting FRDs/PRDs to `lisa.json` format. |
+| `skills/backlog/SKILL.md` | Skill for converting FRDs/PRDs to `lisa.json` format. |
 
 ## How It Works
 

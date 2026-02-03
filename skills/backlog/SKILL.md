@@ -1,9 +1,9 @@
 ---
-name: tasks
-description: "Convert PRDs or FRDs to lisa.json format for the Lisa autonomous agent system. Use when you have an existing PRD or FRD and need to convert it to Lisa's task format. Triggers on: convert this prd, convert this frd, turn this into lisa format, create lisa.json from this, create tasks from this."
+name: backlog
+description: "Convert PRDs or FRDs to lisa.json format for the Lisa autonomous agent system. Use when you have an existing PRD or FRD and need to convert it to Lisa's task format. Triggers on: convert this prd, convert this frd, turn this into lisa format, create lisa.json from this, create backlog from this."
 ---
 
-# Lisa Task Converter
+# Lisa Backlog Converter
 
 Converts existing PRDs (Product Requirements Documents) or FRDs (Functional Requirements Documents) to the lisa.json format that Lisa uses for autonomous execution. Requirements from either document type become entries in the `tasks` array.
 

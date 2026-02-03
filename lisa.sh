@@ -11,9 +11,16 @@ set -e
 # Parse arguments
 MAX_ITERATIONS=${1:-10}
 
-# SCRIPT_DIR = where lisa.sh lives (for LISA.md)
+# SCRIPT_DIR = where lisa.sh actually lives (for LISA.md), resolving symlinks
 # PROJECT_DIR = current working directory (for lisa.json, progress.txt)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SCRIPT_SOURCE" ]; do
+  SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_SOURCE")" && pwd)"
+  SCRIPT_SOURCE="$(readlink "$SCRIPT_SOURCE")"
+  # Handle relative symlinks
+  [[ $SCRIPT_SOURCE != /* ]] && SCRIPT_SOURCE="$SCRIPT_DIR/$SCRIPT_SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_SOURCE")" && pwd)"
 PROJECT_DIR="$(pwd)"
 
 LISA_MD="$SCRIPT_DIR/LISA.md"
