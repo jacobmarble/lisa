@@ -95,18 +95,6 @@ Do NOT add task-specific details or temporary notes.
 - Follow existing code patterns in the codebase
 - One task = one commit
 
-## Stop Condition
-
-After completing a task, check if ALL tasks have `passes: true`.
-
-**If ALL tasks are complete:**
-```
-<promise>COMPLETE</promise>
-```
-
-**If tasks remain with `passes: false`:**
-End your response normally. Another iteration will continue.
-
 ## Summary
 
 Each iteration:
@@ -114,4 +102,5 @@ Each iteration:
 2. Implement it
 3. Verify (typecheck, lint, test, acceptance criteria)
 4. Commit + update lisa.json + log progress
-5. Check if done → output `<promise>COMPLETE</promise>` or end normally
+
+The runner detects completion by checking `lisa.json` directly.

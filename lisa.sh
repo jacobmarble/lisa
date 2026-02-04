@@ -91,10 +91,10 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   echo "  Lisa Iteration $i of $MAX_ITERATIONS"
   echo "==============================================================="
 
-  OUTPUT=$(claude --dangerously-skip-permissions --print < "$LISA_MD" 2>&1 | tee /dev/stderr) || true
+  claude --dangerously-skip-permissions --print < "$LISA_MD" || true
 
-  # Check for completion signal
-  if echo "$OUTPUT" | grep -q "<promise>COMPLETE</promise>"; then
+  # Check if all tasks pass by inspecting lisa.json directly
+  if jq -e '[.tasks[].passes] | all' "$LISA_FILE" > /dev/null 2>&1; then
     echo ""
     echo "Lisa completed all tasks!"
     echo "Completed at iteration $i of $MAX_ITERATIONS"
