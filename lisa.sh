@@ -3,8 +3,8 @@
 # Usage: Run from your project directory: /path/to/lisa.sh [max_iterations]
 #
 # Expects in current directory:
-#   - lisa.json (created via /lisa skill)
-#   - progress.txt (created automatically)
+#   - .lisa/requirements.json (created via /backlog skill)
+#   - .lisa/progress.txt (created automatically)
 
 set -e
 
@@ -12,7 +12,7 @@ set -e
 MAX_ITERATIONS=${1:-10}
 
 # SCRIPT_DIR = where lisa.sh actually lives (for LISA.md), resolving symlinks
-# PROJECT_DIR = current working directory (for lisa.json, progress.txt)
+# PROJECT_DIR = current working directory (for .lisa/requirements.json, .lisa/progress.txt)
 SCRIPT_SOURCE="${BASH_SOURCE[0]}"
 while [ -L "$SCRIPT_SOURCE" ]; do
   SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_SOURCE")" && pwd)"
@@ -24,9 +24,8 @@ SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_SOURCE")" && pwd)"
 PROJECT_DIR="$(pwd)"
 
 LISA_MD="$SCRIPT_DIR/LISA.md"
-LISA_FILE="$PROJECT_DIR/lisa.json"
-PROGRESS_FILE="$PROJECT_DIR/progress.txt"
-ARCHIVE_DIR="$PROJECT_DIR/.lisa/archive"
+LISA_FILE="$PROJECT_DIR/.lisa/requirements.json"
+PROGRESS_FILE="$PROJECT_DIR/.lisa/progress.txt"
 LAST_BRANCH_FILE="$PROJECT_DIR/.lisa/.last-branch"
 
 # Validate required files exist
@@ -36,36 +35,22 @@ if [ ! -f "$LISA_MD" ]; then
 fi
 
 if [ ! -f "$LISA_FILE" ]; then
-  echo "Error: lisa.json not found in current directory"
-  echo "Create it using the /lisa skill to convert an FRD or PRD."
+  echo "Error: .lisa/requirements.json not found in current directory"
+  echo "Create it using the /backlog skill to convert an FRD or PRD."
   exit 1
 fi
 
 # Ensure .lisa directory exists
 mkdir -p "$PROJECT_DIR/.lisa"
 
-# Archive previous run if branch changed
+# Clean up previous run if branch changed
 if [ -f "$LAST_BRANCH_FILE" ]; then
   CURRENT_BRANCH=$(jq -r '.branchName // empty' "$LISA_FILE" 2>/dev/null || echo "")
   LAST_BRANCH=$(cat "$LAST_BRANCH_FILE" 2>/dev/null || echo "")
 
   if [ -n "$CURRENT_BRANCH" ] && [ -n "$LAST_BRANCH" ] && [ "$CURRENT_BRANCH" != "$LAST_BRANCH" ]; then
-    # Archive the previous run
-    DATE=$(date +%Y-%m-%d)
-    # Strip "lisa/" prefix from branch name for folder
-    FOLDER_NAME="${LAST_BRANCH#lisa/}"
-    ARCHIVE_FOLDER="$ARCHIVE_DIR/$DATE-$FOLDER_NAME"
-
-    echo "Archiving previous run: $LAST_BRANCH"
-    mkdir -p "$ARCHIVE_FOLDER"
-    [ -f "$LISA_FILE" ] && cp "$LISA_FILE" "$ARCHIVE_FOLDER/"
-    [ -f "$PROGRESS_FILE" ] && cp "$PROGRESS_FILE" "$ARCHIVE_FOLDER/"
-    echo "   Archived to: $ARCHIVE_FOLDER"
-
-    # Reset progress file for new run
-    echo "# Lisa Progress Log" > "$PROGRESS_FILE"
-    echo "Started: $(date)" >> "$PROGRESS_FILE"
-    echo "---" >> "$PROGRESS_FILE"
+    echo "Branch changed from $LAST_BRANCH to $CURRENT_BRANCH"
+    rm -f "$PROGRESS_FILE"
   fi
 fi
 
@@ -93,7 +78,7 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
 
   claude --dangerously-skip-permissions --print < "$LISA_MD" || true
 
-  # Check if all tasks pass by inspecting lisa.json directly
+  # Check if all tasks pass by inspecting requirements.json directly
   if jq -e '[.tasks[].passes] | all' "$LISA_FILE" > /dev/null 2>&1; then
     echo ""
     echo "Lisa completed all tasks!"

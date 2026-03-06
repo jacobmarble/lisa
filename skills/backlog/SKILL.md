@@ -1,21 +1,63 @@
 ---
 name: backlog
-description: "Convert PRDs or FRDs to lisa.json format for the Lisa autonomous agent system. Use when you have an existing PRD or FRD and need to convert it to Lisa's task format. Triggers on: convert this prd, convert this frd, turn this into lisa format, create lisa.json from this, create backlog from this."
+description: "Convert PRDs or FRDs to requirements.json format for the Lisa autonomous agent system. Use when you have an existing PRD or FRD and need to convert it to Lisa's task format. Triggers on: convert this prd, convert this frd, turn this into lisa format, create requirements.json from this, create backlog from this."
 ---
 
 # Lisa Backlog Converter
 
-Converts existing PRDs (Product Requirements Documents) or FRDs (Functional Requirements Documents) to the lisa.json format that Lisa uses for autonomous execution. Requirements from either document type become entries in the `tasks` array.
+Converts existing PRDs (Product Requirements Documents) or FRDs (Functional Requirements Documents) to the requirements.json format that Lisa uses for autonomous execution. Requirements from either document type become entries in the `tasks` array.
 
 ---
 
 ## The Job
 
-Take a PRD or FRD (markdown file or text) and convert it to `lisa.json` in the **target project's root directory** (where the code lives).
+1. Find the input requirements document (see Step 0)
+2. Interview the user to clarify implementation details using the AskUserQuestion tool
+3. Convert to `.lisa/requirements.json` in the **target project's directory** (where the code lives)
+
+**Important:** Do NOT skip the interview. Details that seem obvious in a requirements doc often become ambiguous when breaking work into concrete tasks.
 
 ---
 
-## Output Format
+## Step 0: Find the Input Document
+
+If the user provides a specific file or document, use that.
+
+If the user provides **no additional prompt** (bare `/backlog` invocation), auto-discover the input:
+
+1. Glob for `.lisa/require-*.md` files in the current project
+2. **If exactly one match:** use it as the input document. Tell the user which file you're using.
+3. **If multiple matches:** use AskUserQuestion to ask which document to convert. List each filename as an option.
+4. **If no matches:** tell the user no requirements documents were found in `.lisa/` and ask them to provide one or run the `/require` skill first.
+
+---
+
+## Step 1: Interview
+
+After reading the source document, interview the user using the AskUserQuestion tool. The goal is to surface ambiguities and implementation details that affect how tasks are split, ordered, and verified.
+
+### What to Ask About
+
+Pick questions relevant to the document. Not all topics apply every time.
+
+- **Target project:** Where does the code live? What is the tech stack, framework, and language? What are the build/test/typecheck commands?
+- **Task granularity:** Are there requirements the user considers trivial (combine into one task) or large (need extra splitting)?
+- **Implementation order:** Are there dependencies between requirements that aren't obvious from the document? Does the user want a specific ordering?
+- **Scope adjustments:** Are there requirements to defer, skip, or deprioritize for this run?
+- **Existing patterns:** Are there existing files, components, or conventions the tasks should follow? Code to reference or reuse?
+- **Verification:** Beyond typecheck, what verification matters? Specific test commands, linting, browser checks?
+- **Branch naming:** Does the user have a preferred branch name, or should one be derived from the feature?
+
+### Interview Guidance
+
+- **Batch questions.** Ask 2–4 related questions per round, not one at a time.
+- **Ask leading questions toward best practices**, but accept the user's override if they disagree.
+- **Stop when you have enough information** to produce unambiguous, right-sized tasks. Do not over-interview.
+- **Use what you learn** to inform task splitting, ordering, acceptance criteria, and descriptions.
+
+---
+
+## Step 2: Output Format
 
 ```json
 {
@@ -160,7 +202,7 @@ Add ability to mark tasks with different statuses.
 - Persist status in database
 ```
 
-**Output lisa.json:**
+**Output requirements.json:**
 ```json
 {
   "project": "TaskApp",
@@ -229,20 +271,12 @@ Add ability to mark tasks with different statuses.
 
 ---
 
-## Archiving Previous Runs
-
-**The lisa.sh script handles archiving automatically** when the branch name changes. Archives are stored in `.lisa/archive/` in the project directory.
-
-If you need to manually archive before writing a new lisa.json:
-1. Check if `branchName` differs from the new feature's branch name
-2. If different, copy current `lisa.json` and `progress.txt` to `.lisa/archive/YYYY-MM-DD-feature-name/`
-
----
-
 ## Checklist Before Saving
 
-Before writing lisa.json to the project root, verify:
+Before writing `.lisa/requirements.json`, verify:
 
+- [ ] Completed interview with AskUserQuestion tool
+- [ ] Incorporated user's answers into task design
 - [ ] Each task is completable in one iteration (small enough)
 - [ ] Tasks are ordered by dependency (schema → backend → UI)
 - [ ] Every task has "Typecheck passes" as criterion
