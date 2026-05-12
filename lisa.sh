@@ -76,7 +76,7 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   echo "  Lisa Iteration $i of $MAX_ITERATIONS"
   echo "==============================================================="
 
-  claude --dangerously-skip-permissions --print < "$LISA_MD" || true
+  claude --dangerously-skip-permissions --print --model opus --effort max < "$LISA_MD" || true
 
   # Check if all tasks pass by inspecting requirements.json directly
   if jq -e '[.tasks[].passes] | all' "$LISA_FILE" > /dev/null 2>&1; then
